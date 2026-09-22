@@ -1,0 +1,19 @@
+services:
+  qmassa-exporter:
+    image: bdelima/qmassa-exporter:latest
+    container_name: qmassa-exporter
+    restart: unless-stopped
+    # Host PID namespace lets qmassa attribute GPU usage to processes
+    # running in *other* containers (e.g. an NVR's ffmpeg processes).
+    pid: "host"
+    # Try dropping this first; only add it back if you hit permission
+    # errors reading other processes' DRM fdinfo.
+    privileged: true
+    devices:
+      - /dev/dri:/dev/dri
+    ports:
+      - "9820:9820"
+    environment:
+      TZ: "America/New_York"
+      # EXPORTER_PORT: "9820"
+      # QMASSA_INTERVAL_MS: "1000"
