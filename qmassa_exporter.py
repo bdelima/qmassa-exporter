@@ -16,6 +16,7 @@ QMASSA_BIN = "/usr/local/bin/qmassa"
 STREAM_FILE = "/tmp/qmassa_stream.json"
 PORT = int(os.environ.get("EXPORTER_PORT", "9820"))
 INTERVAL_MS = os.environ.get("QMASSA_INTERVAL_MS", "1000")
+APP_VERSION = os.environ.get("APP_VERSION", "unknown")
 
 latest = {"eng_usage": {}, "clients": []}
 lock = threading.Lock()
@@ -107,6 +108,9 @@ class MetricsHandler(BaseHTTPRequestHandler):
             clients = list(latest["clients"])
 
         lines = [
+            "# HELP qmassa_exporter_build_info Exporter build metadata (always 1, version in the label)",
+            "# TYPE qmassa_exporter_build_info gauge",
+            f'qmassa_exporter_build_info{{version="{APP_VERSION}"}} 1',
             "# HELP qmassa_gpu_engine_busy_percent GPU engine busy percentage (DRM fdinfo, via qmassa)",
             "# TYPE qmassa_gpu_engine_busy_percent gauge",
         ]

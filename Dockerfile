@@ -10,5 +10,14 @@ RUN cargo install --locked qmassa@1.3.2
 FROM python:3.13-slim-bookworm
 COPY --from=builder /usr/local/cargo/bin/qmassa /usr/local/bin/qmassa
 COPY qmassa_exporter.py /app/qmassa_exporter.py
+
+ARG VERSION=unknown
+ARG REVISION=unknown
+LABEL org.opencontainers.image.source="https://github.com/bdelima/qmassa-exporter" \
+      org.opencontainers.image.url="https://github.com/bdelima/qmassa-exporter" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${REVISION}"
+ENV APP_VERSION="${VERSION}"
+
 EXPOSE 9820
 ENTRYPOINT ["python3", "/app/qmassa_exporter.py"]
