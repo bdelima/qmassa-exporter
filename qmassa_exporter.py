@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-qmassa-exporter: tails qmassa's continuous JSON output and serves it as a
-Prometheus /metrics endpoint. Bridges qmassa (real per-engine GPU usage via
-DRM fdinfo, works on xe) into Prometheus without needing the qmmd daemon
-(which requires a newer Rust than most distros currently package).
+qmassa-exporter: reads qmassa's continuous JSON output (through a named pipe,
+so nothing accumulates on disk) and serves it as a Prometheus /metrics
+endpoint. Bridges qmassa (real per-engine GPU usage via DRM fdinfo, works on
+xe) into Prometheus without needing the qmmd daemon (which requires a newer
+Rust than most distros currently package).
 """
 import json
 import os
@@ -23,10 +24,18 @@ lock = threading.Lock()
 
 
 def start_qmassa():
-    # -n -1 (default) runs indefinitely, appending one JSON line per sample
-    # to STREAM_FILE until the process is killed.
-    if os.path.exists(STREAM_FILE):
+    # -n -1 (default) runs indefinitely, writing one JSON line per sample to
+    # the -t path until the process is killed. Each line is a full snapshot
+    # of qmassa's state (a rolling window of ~40 samples per stat), and we
+    # only ever use the newest line. Pointing -t at a regular file made it
+    # grow without bound (GBs/day) since qmassa never trims it, so STREAM_FILE
+    # is a named pipe instead: qmassa opens it for writing (O_TRUNC is
+    # ignored for FIFOs) and nothing is stored on disk.
+    # Remove whatever is at the path first (a stale FIFO, or a regular file
+    # left in the container's writable layer by an older version).
+    if os.path.lexists(STREAM_FILE):
         os.remove(STREAM_FILE)
+    os.mkfifo(STREAM_FILE, 0o600)
     subprocess.Popen(
         [QMASSA_BIN, "-x", "-m", INTERVAL_MS, "-t", STREAM_FILE],
         stdout=subprocess.DEVNULL,
@@ -38,6 +47,7 @@ def tail_thread():
     while not os.path.exists(STREAM_FILE):
         time.sleep(1)
 
+    # Opening a FIFO for reading blocks until qmassa opens the write end.
     with open(STREAM_FILE, "r") as f:
         # First two lines are a version string and the run's config echo,
         # not a data sample — skip them once.
