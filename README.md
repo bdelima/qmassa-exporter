@@ -47,4 +47,4 @@ docker build -t qmassa-exporter .
 
 ## Versioning / releases
 
-This repo publishes to Docker Hub as [`bdelima/qmassa-exporter`](https://hub.docker.com/r/bdelima/qmassa-exporter) (multi-arch: `linux/amd64`, `linux/arm64`) automatically whenever the `VERSION` file is bumped on a push to `main` — see `.github/workflows/docker-publish.yml`.
+This repo publishes to Docker Hub as [`bdelima/qmassa-exporter`](https://hub.docker.com/r/bdelima/qmassa-exporter) (`linux/amd64` only) automatically whenever the `VERSION` file is bumped on a push to `main` — see `.github/workflows/docker-publish.yml`.
