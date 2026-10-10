@@ -17,7 +17,25 @@ QMASSA_BIN = "/usr/local/bin/qmassa"
 STREAM_FILE = "/tmp/qmassa_stream.json"
 PORT = int(os.environ.get("EXPORTER_PORT", "9820"))
 INTERVAL_MS = os.environ.get("QMASSA_INTERVAL_MS", "1000")
-APP_VERSION = os.environ.get("APP_VERSION", "unknown")
+VERSION_FILE = "/app/VERSION"
+
+
+def read_version():
+    # The image's version, written to VERSION_FILE at build time. The
+    # APP_VERSION env var is only a fallback: a container recreated by a tool
+    # that copies the old container's config (Portainer does) keeps the OLD
+    # env value, while the file always belongs to the image actually running.
+    try:
+        with open(VERSION_FILE) as f:
+            v = f.read().strip()
+        if v and v != "unknown":
+            return v
+    except OSError:
+        pass
+    return os.environ.get("APP_VERSION", "unknown")
+
+
+APP_VERSION = read_version()
 
 latest = {"eng_usage": {}, "clients": []}
 lock = threading.Lock()
