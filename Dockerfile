@@ -1,10 +1,10 @@
-# Build stage — compile qmassa (pinned to 1.3.2: newer releases need a
-# rustc version this base image's default toolchain doesn't have)
-FROM rust:1.85-bookworm AS builder
+# Build stage — compile qmassa. 2.x needs Rust 1.88+ (crates.io rust-version),
+# so the builder is rust:1.90 (1.3.2 was pinned only for the old rust:1.85).
+FROM rust:1.90-bookworm AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libudev-dev pkg-config \
     && rm -rf /var/lib/apt/lists/*
-RUN cargo install --locked qmassa@1.3.2
+RUN cargo install --locked qmassa@2.1.1
 
 # Runtime stage
 FROM python:3.13-slim-bookworm
