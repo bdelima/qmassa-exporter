@@ -18,6 +18,9 @@ LABEL org.opencontainers.image.source="https://github.com/bdelima/qmassa-exporte
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${REVISION}"
 ENV APP_VERSION="${VERSION}"
+# The exporter reads its version from this file first (see qmassa_exporter.py):
+# a recreated container can carry a stale APP_VERSION copied from the old one.
+RUN echo "${VERSION}" > /app/VERSION
 
 EXPOSE 9820
 ENTRYPOINT ["python3", "/app/qmassa_exporter.py"]
